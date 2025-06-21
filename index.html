@@ -9,7 +9,7 @@
 </head>
 <body class="bg-gray-100 p-6">
   <div class="max-w-5xl mx-auto bg-white rounded shadow-md p-6 space-y-4">
-    <h1 class="text-2xl font-semibold text-center">FLC Thermal Controller</h1>
+    <h1 class="text-2xl font-semibold text-center">Temperature Operator</h1>
 
     <!-- Controls -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -36,7 +36,30 @@
 
     <!-- IA Output -->
     <div>
-      <p class="text-lg">FLC Output: <span id="outputStatus" class="font-bold">NC</span></p>
+      <p class="text-lg">Action: <span id="outputStatus" class="font-bold">No Change</span></p>
+    </div>
+        <!-- Live Metrics -->
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 text-center text-sm font-medium text-gray-700">
+      <div class="bg-white border border-green-300 rounded p-2">
+        <p>Current Temperature</p>
+        <p id="currentTemp" class="text-lg font-bold text-blue-600">--</p>
+      </div>
+      <div class="bg-white border border-green-300 rounded p-2">
+        <p>Target Temperature</p>
+        <p id="targetDisplay" class="text-lg font-bold text-red-600">--</p>
+      </div>
+      <div class="bg-white border border-green-300 rounded p-2">
+        <p>Error</p>
+        <p id="errorDisplay" class="text-lg font-bold text-orange-600">--</p>
+      </div>
+      <div class="bg-white border border-green-300 rounded p-2">
+        <p>Error Rate</p>
+        <p id="errorRate" class="text-lg font-bold text-purple-600">--</p>
+      </div>
+      <div class="bg-white border border-green-300 rounded p-2">
+        <p>Time Elapsed</p>
+        <p id="timeElapsed" class="text-lg font-bold text-gray-800">--</p>
+      </div>
     </div>
 
     <!-- Charts -->
@@ -51,14 +74,14 @@
     let errorHistory = [], actualHistory = [], time = 0;
     let prevError = 0;
 
-    const outputStatus = document.getElementById("outputStatus");
+    const outputDisplay = document.getElementById("outputStatus");
     const errorCtx = document.getElementById("errorChart").getContext("2d");
     const skewCtx = document.getElementById("skewChart").getContext("2d");
 
     const errorChart = new Chart(errorCtx, {
       type: "line",
       data: { labels: [], datasets: [
-        { label: "Actual Temp", data: [], borderColor: "blue", fill: false },
+        { label: "Actual Temp", data: [], borderColor: "orange", fill: false },
         { label: "Target Temp", data: [], borderColor: "red", fill: false }
       ]},
       options: { scales: { y: { beginAtZero: false } }}
@@ -104,6 +127,12 @@
         const errorDot = error - prevError;
         const decision = fuzzyLogic(error, errorDot);
         outputStatus.textContent = decision;
+
+        document.getElementById("currentTemp").textContent = actual.toFixed(1) + "°C";
+        document.getElementById("targetDisplay").textContent = target.toFixed(1) + "°C";
+        document.getElementById("errorDisplay").textContent = error.toFixed(2);
+        document.getElementById("errorRate").textContent = errorDot.toFixed(2) + "°C/s";
+        document.getElementById("timeElapsed").textContent = time.toFixed(1) + "s";
 
 
         if (decision === "Heater") actual += 3;
