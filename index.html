@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FLC Thermal Controller - Intelligent Agent</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-blue-50 min-h-screen p-6">
+  <div class="max-w-6xl mx-auto">
+    <h1 class="text-3xl font-bold text-center text-green-700 mb-6">FLC Thermal Controller - Intelligent Agent</h1>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div class="bg-white p-4 rounded shadow">
+        <h2 class="text-lg font-semibold mb-2">Temperature Settings</h2>
+        <label class="block mb-1">Target Temperature (°C)</label>
+        <input id="target" type="number" value="25" class="w-full border rounded px-2 py-1 mb-2">
+
+        <label class="block mb-1">Initial Temperature (°C)</label>
+        <input id="actual" type="number" value="20" class="w-full border rounded px-2 py-1">
+      </div>
+
+      <div class="bg-white p-4 rounded shadow">
+        <h2 class="text-lg font-semibold mb-2">Control Settings</h2>
+        <label class="block mb-1">Skew Rate (seconds)</label>
+        <select id="skew" class="w-full border rounded px-2 py-1">
+          <option value="2000">2.0</option>
+          <option value="1000">1.0</option>
+          <option value="500">0.5</option>
+          <option value="100">0.1</option>
+        </select>
+
+        <div class="flex justify-between mt-4">
+          <button onclick="startSimulation()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">Start</button>
+          <button onclick="stopSimulation()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded">Reset</button>
+        </div>
+      </div>
+
+      <div class="bg-white p-4 rounded shadow">
+        <h2 class="text-lg font-semibold mb-2">System Status</h2>
+        <p>Status: <span id="status" class="font-bold text-gray-700">Idle</span></p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4 mb-6">
+      <div class="bg-white p-4 rounded shadow">
+        <h3 class="font-medium">Current Temperature</h3>
+        <p class="text-2xl text-blue-600 font-bold" id="currTemp">--</p>
+      </div>
+      <div class="bg-white p-4 rounded shadow">
+        <h3 class="font-medium">Error</h3>
+        <p class="text-2xl text-red-600 font-bold" id="currError">--</p>
+      </div>
+    </div>
+
+    <div class="bg-white p-4 rounded shadow mb-6">
+      <canvas id="tempChart" height="100"></canvas>
+    </div>
+    <div class="bg-white p-4 rounded shadow">
+      <canvas id="errorChart" height="100"></canvas>
+    </div>
+  </div>
+
+  <script>
+    let tempChart, errorChart, intervalId;
+    let tempData = [], errorData = [], labels = [];
+    let prevError = 0, time = 0, actualTemp = 0;
+
+    function startSimulation() {
+      clearInterval(intervalId);
+      resetCharts();
+
+      const target = parseFloat(document.getElementById('target').value);
+      actualTemp = parseFloat(document.getElementById('actual').value);
+      const skew = parseInt(document.getElementById('skew').value);
+      time = 0;
+      prevError = target - actualTemp;
+
+      intervalId = setInterval(() => {
+        const error = target - actualTemp;
+        const edot = error - prevError;
+
+        const output = fuzzyLogic(error, edot);
+        if (output === 'Heater') actualTemp += 3;
+        else if (output === 'Cooler') actualTemp -= 3;
+
+        document.getElementById('status').textContent = output;
+        document.getElementById('currTemp').textContent = actualTemp.toFixed(1) + '°C';
+        document.getElementById('currError').textContent = error.toFixed(1);
+
+        labels.push(time.toFixed(1));
+        tempData.push(actualTemp);
+        errorData.push(error);
+
+        tempChart.data.labels = labels;
+        tempChart.data.datasets[0].data = tempData;
+        tempChart.update();
+
+        errorChart.data.labels = labels;
+        errorChart.data.datasets[0].data = errorData;
+        errorChart.update();
+
+        prevError = error;
+        time += skew / 1000;
+      }, skew);
+    }
+
+    function stopSimulation() {
+      clearInterval(intervalId);
+      document.getElementById('status').textContent = 'Idle';
+    }
+
+    function resetCharts() {
+      tempData = [], errorData = [], labels = [];
+      const ctx1 = document.getElementById('tempChart').getContext('2d');
+      const ctx2 = document.getElementById('errorChart').getContext('2d');
+
+      tempChart = new Chart(ctx1, {
+        type: 'line',
+        data: { labels: [], datasets: [{ label: 'Temperature (°C)', borderColor: 'blue', data: [], fill: false }] },
+        options: { animation: false, scales: { y: { beginAtZero: false } } }
+      });
+
+      errorChart = new Chart(ctx2, {
+        type: 'line',
+        data: { labels: [], datasets: [{ label: 'Error (°C)', borderColor: 'red', data: [], fill: false }] },
+        options: { animation: false, scales: { y: { beginAtZero: false } } }
+      });
+    }
+
+    function fuzzyLogic(e, ed) {
+      if (e < 0 && ed < 0) return 'Cooler';
+      if (e < 0 && ed === 0) return 'Cooler';
+      if (e < 0 && ed > 0) return 'Cooler';
+      if (e === 0 && ed < 0) return 'Heater';
+      if (e === 0 && ed === 0) return 'No Change';
+      if (e === 0 && ed > 0) return 'Cooler';
+      if (e > 0 && ed < 0) return 'Heater';
+      if (e > 0 && ed === 0) return 'Heater';
+      if (e > 0 && ed > 0) return 'Heater';
+      return 'No Change';
+    }
+
+    // Initialize empty charts on load
+    window.onload = resetCharts;
+  </script>
+</body>
+</html>
