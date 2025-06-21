@@ -103,7 +103,8 @@
         const error = target - actual;
         const errorDot = error - prevError;
         const decision = fuzzyLogic(error, errorDot);
-        outputStatus.textContent = decision[0];
+        outputStatus.textContent = decision;
+
 
         if (decision === "Heater") actual += 3;
         else if (decision === "Cooler") actual -= 3;
