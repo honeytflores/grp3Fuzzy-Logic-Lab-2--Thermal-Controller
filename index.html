@@ -129,14 +129,14 @@
       prevError = target - actual;
 
       const interval = setInterval(() => {
-        const error = target - actual;
-        const errorDot = error - prevError;
+        const error = target - actual; // +error = too cold, -error = too hot
+        const errorDot = error - prevError; // +errorDot = getting cooler, -errorDot = getting hotter
         const decision = fuzzyLogic(error, errorDot);
         outputStatus.textContent = decision;
 
         document.getElementById("currentTemp").textContent = actual.toFixed(1) + "°C";
         document.getElementById("targetDisplay").textContent = target.toFixed(1) + "°C";
-        document.getElementById("errorDisplay").textContent = error.toFixed(2);
+        document.getElementById("errorDisplay").textContent = error.toFixed(2) + "°C";
         document.getElementById("errorRate").textContent = errorDot.toFixed(2) + "°C/s";
         document.getElementById("timeElapsed").textContent = time.toFixed(1) + "s";
 
