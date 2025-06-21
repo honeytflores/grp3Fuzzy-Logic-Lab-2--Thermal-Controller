@@ -7,159 +7,231 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 p-6">
-  <div class="max-w-5xl mx-auto bg-white rounded shadow-md p-6 space-y-4">
-    <h1 class="text-2xl font-semibold text-center">Temperature Operator</h1>
+<body class="bg-gradient-to-r from-indigo-100 via-purple-100 to-pink-100 min-h-screen p-8 font-sans">
+  <div class="max-w-6xl mx-auto bg-white rounded-3xl shadow-xl p-10 space-y-8 border-4 border-indigo-300">
+    <h1 class="text-4xl font-bold text-center text-indigo-700 tracking-wide">Thermal Control Dashboard</h1>
 
     <!-- Controls -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div>
-        <label class="block mb-1">Target Temperature</label>
-        <input id="targetTemp" type="number" class="w-full border rounded px-2 py-1" value="25" />
+        <label class="block mb-2 font-medium text-gray-700">Target Temperature</label>
+        <input id="targetTemp" type="number" class="w-full border-2 border-purple-400 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500" value="25" />
       </div>
       <div>
-        <label class="block mb-1">Initial Actual Temperature</label>
-        <input id="actualTemp" type="number" class="w-full border rounded px-2 py-1" value="20" />
+        <label class="block mb-2 font-medium text-gray-700">Initial Actual Temperature</label>
+        <input id="actualTemp" type="number" class="w-full border-2 border-purple-400 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500" value="20" />
       </div>
     </div>
 
-    <div class="flex gap-4">
-      <label class="block">Skew Rate</label>
-      <select id="skewRate" class="border rounded px-2 py-1">
+    <div class="flex flex-wrap gap-4 items-center mt-2">
+      <label class="block text-gray-700 font-medium">Skew Rate</label>
+      <select id="skewRate" class="border-2 border-pink-300 bg-white rounded-xl px-4 py-2 text-gray-800 focus:outline-none">
         <option value="2000">2 sec</option>
         <option value="1000">1 sec</option>
         <option value="100">0.1 sec</option>
         <option value="500">0.5 sec</option>
       </select>
-      <button onclick="startFLC()" class="ml-auto bg-blue-600 text-white px-4 py-2 rounded">Start</button>
+      <button onclick="startFLC()" class="ml-auto bg-pink-600 hover:bg-pink-700 text-white px-6 py-2 rounded-full shadow-lg transition">Start</button>
     </div>
 
     <!-- IA Output -->
-    <div>
-      <p class="text-lg">Action: <span id="outputStatus" class="font-bold">No Change</span></p>
+    <div class="mt-4 text-xl text-center text-gray-800">
+      Action: <span id="outputStatus" class="font-bold text-indigo-800">No Change</span>
     </div>
-        <!-- Live Metrics -->
-    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 text-center text-sm font-medium text-gray-700">
-      <div class="bg-white border border-green-300 rounded p-2">
-        <p>Current Temperature</p>
-        <p id="currentTemp" class="text-lg font-bold text-blue-600">--</p>
+
+    <!-- History Log -->
+    <div class="mt-6">
+      <h2 class="text-lg font-semibold text-gray-700 mb-2">Decision Log</h2>
+      <div id="historyLog" class="bg-gray-50 border border-gray-300 rounded-lg p-4 h-40 overflow-y-auto text-sm font-mono text-gray-700 whitespace-pre-line"></div>
+    </div>
+
+    <!-- Live Metrics -->
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 text-center text-sm font-medium text-gray-600">
+      <div class="bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-400 rounded-xl p-4">
+        <p class="mb-1">Current Temperature</p>
+        <p id="currentTemp" class="text-2xl font-extrabold text-blue-600">--</p>
       </div>
-      <div class="bg-white border border-green-300 rounded p-2">
-        <p>Target Temperature</p>
-        <p id="targetDisplay" class="text-lg font-bold text-red-600">--</p>
+      <div class="bg-gradient-to-br from-red-50 to-red-100 border-2 border-red-400 rounded-xl p-4">
+        <p class="mb-1">Target Temperature</p>
+        <p id="targetDisplay" class="text-2xl font-extrabold text-red-600">--</p>
       </div>
-      <div class="bg-white border border-green-300 rounded p-2">
-        <p>Error</p>
-        <p id="errorDisplay" class="text-lg font-bold text-orange-600">--</p>
+      <div class="bg-gradient-to-br from-orange-50 to-orange-100 border-2 border-orange-400 rounded-xl p-4">
+        <p class="mb-1">Error</p>
+        <p id="errorDisplay" class="text-2xl font-extrabold text-orange-600">--</p>
       </div>
-      <div class="bg-white border border-green-300 rounded p-2">
-        <p>Error Rate</p>
-        <p id="errorRate" class="text-lg font-bold text-purple-600">--</p>
+      <div class="bg-gradient-to-br from-purple-50 to-purple-100 border-2 border-purple-400 rounded-xl p-4">
+        <p class="mb-1">Error Rate</p>
+        <p id="errorRate" class="text-2xl font-extrabold text-purple-600">--</p>
       </div>
-      <div class="bg-white border border-green-300 rounded p-2">
-        <p>Time Elapsed</p>
-        <p id="timeElapsed" class="text-lg font-bold text-gray-800">--</p>
+      <div class="bg-gradient-to-br from-gray-50 to-gray-100 border-2 border-gray-400 rounded-xl p-4">
+        <p class="mb-1">Time Elapsed</p>
+        <p id="timeElapsed" class="text-2xl font-extrabold text-gray-800">--</p>
       </div>
     </div>
 
     <!-- Charts -->
-  <div class="flex flex-col gap-4 mt-6">
-    <div class="bg-white rounded shadow p-4">
-      <h2 class="text-center font-semibold mb-2">Temperature Over Time</h2>
-      <canvas id="errorChart"></canvas>
-    </div>
-    <div class="bg-white rounded shadow p-4">
-      <h2 class="text-center font-semibold mb-2">Error Over Time</h2>
-      <canvas id="skewChart"></canvas>
+    <div class="grid md:grid-cols-2 gap-6 mt-6">
+      <div class="bg-white border-2 border-indigo-300 rounded-2xl shadow-md p-6">
+        <h2 class="text-xl font-semibold text-center text-indigo-600 mb-4">Temperature Over Time</h2>
+        <canvas id="errorChart"></canvas>
+      </div>
+      <div class="bg-white border-2 border-pink-300 rounded-2xl shadow-md p-6">
+        <h2 class="text-xl font-semibold text-center text-pink-600 mb-4">Error Over Time</h2>
+        <canvas id="skewChart"></canvas>
+      </div>
     </div>
   </div>
-  </div>
 
-  <script>
-    let target, actual, skewRate;
-    let errorHistory = [], actualHistory = [], time = 0;
-    let prevError = 0;
+<script>
+  let target, actual, skewRate;
+  let time = 0;
+  let prevError = 0;
 
-    const outputDisplay = document.getElementById("outputStatus");
-    const errorCtx = document.getElementById("errorChart").getContext("2d");
-    const skewCtx = document.getElementById("skewChart").getContext("2d");
+  const outputDisplay = document.getElementById("outputStatus");
+  const errorCtx = document.getElementById("errorChart").getContext("2d");
+  const skewCtx = document.getElementById("skewChart").getContext("2d");
+  const historyLog = document.getElementById("historyLog");
 
-    const errorChart = new Chart(errorCtx, {
+  const errorChart = initErrorChart();
+  const skewChart = initSkewChart();
+
+  // --- Fuzzy Calculation Logic ---
+
+  function trapmf(x, a, b, c, d) {
+    return Math.max(Math.min((x - a) / (b - a), 1, (d - x) / (d - c)), 0);
+  }
+
+  function trimf(x, a, b, c) {
+    return Math.max(Math.min((x - a) / (b - a), (c - x) / (c - b)), 0);
+  }
+
+  function getFuzzyDecision(error, errorDot) {
+    const fuzzyE = {
+      negative: trapmf(error, -1000, -999, -2, 0),
+      zero: trimf(error, -2, 0, 2),
+      positive: trapmf(error, 0, 2, 999, 1000)
+    };
+
+    const fuzzyEDot = {
+      negative: trapmf(errorDot, -1000, -999, -5, 0),
+      zero: trimf(errorDot, -5, 0, 5),
+      positive: trapmf(errorDot, 0, 5, 999, 1000)
+    };
+
+    const heater = Math.max(
+      Math.min(fuzzyE.positive, fuzzyEDot.positive),
+      Math.min(fuzzyE.positive, fuzzyEDot.zero),
+      Math.min(fuzzyE.positive, fuzzyEDot.negative),
+      Math.min(fuzzyE.zero, fuzzyEDot.negative)
+    );
+
+    const cooler = Math.max(
+      Math.min(fuzzyE.negative, fuzzyEDot.positive),
+      Math.min(fuzzyE.negative, fuzzyEDot.zero),
+      Math.min(fuzzyE.negative, fuzzyEDot.negative),
+      Math.min(fuzzyE.zero, fuzzyEDot.positive)
+    );
+
+    const noChange = Math.min(fuzzyE.zero, fuzzyEDot.zero);
+
+    if (heater > cooler && heater > noChange) return "Heater";
+    if (cooler > heater && cooler > noChange) return "Cooler";
+    return "No Change";
+  }
+
+  function calculateStep(error) {
+    if (Math.abs(error) < 2) return 0.75;
+    if (Math.abs(error) < 5) return 1.5;
+    return 3;
+  }
+
+  function updateActual(decision, step) {
+    if (decision === "Heater") actual += step;
+    else if (decision === "Cooler") actual -= step;
+  }
+
+  // --- UI Rendering Logic ---
+
+  function initErrorChart() {
+    return new Chart(errorCtx, {
       type: "line",
       data: { labels: [], datasets: [
-        { label: "Actual Temp", data: [], borderColor: "orange", fill: false },
-        { label: "Target Temp", data: [], borderColor: "red", fill: false }
+        { label: "Actual Temp", data: [], borderColor: "#6366f1", fill: false, tension: 0.3 },
+        { label: "Target Temp", data: [], borderColor: "#ef4444", fill: false, tension: 0.3 }
       ]},
-      options: { scales: { y: { beginAtZero: false } }}
+      options: { scales: { y: { beginAtZero: false } } }
     });
+  }
 
-    const skewChart = new Chart(skewCtx, {
+  function initSkewChart() {
+    return new Chart(skewCtx, {
       type: "line",
       data: { labels: [], datasets: [
-        { label: "Skew Rate (Error)", data: [], borderColor: "green", fill: false }
+        { label: "Skew Rate (Error)", data: [], borderColor: "#10b981", fill: false, tension: 0.3 }
       ]},
-      options: { scales: { y: { beginAtZero: false } }}
+      options: { scales: { y: { beginAtZero: false } } }
     });
+  }
 
-    function fuzzyLogic(error, errorDot) {
-      // FLC rules logic
-      if (error < -1) {
-        if (errorDot <= 0) return "Heater";
-        else return "Heater";
-      } else if (error > 1) {
-        return "Cooler";
-      } else {
-        if (Math.abs(errorDot) < 1) return "No Change";
-        else if (errorDot > 0) return "Cooler";
-        else return "Heater";
-      }
-    }
+  function updateDisplay(error, errorDot, decision) {
+    document.getElementById("currentTemp").textContent = actual.toFixed(1) + "°C";
+    document.getElementById("targetDisplay").textContent = target.toFixed(1) + "°C";
+    document.getElementById("errorDisplay").textContent = error.toFixed(2) + "°C";
+    document.getElementById("errorRate").textContent = errorDot.toFixed(4) + "°C/s";
+    document.getElementById("timeElapsed").textContent = time.toFixed(1) + "s";
+    outputDisplay.textContent = decision;
+  }
 
-    function startFLC() {
-      // Reset
-      errorChart.data.labels = [];
-      errorChart.data.datasets.forEach(ds => ds.data = []);
-      skewChart.data.labels = [];
-      skewChart.data.datasets[0].data = [];
-      time = 0;
+  function updateLog(error, errorDot, decision) {
+    const log = `t=${time.toFixed(1)}s | Actual=${actual.toFixed(1)}°C | Target=${target.toFixed(1)}°C | Error=${error.toFixed(2)} | ErrorDot=${errorDot.toFixed(4)} | Action=${decision}`;
+    historyLog.textContent += log + "\n";
+    historyLog.scrollTop = historyLog.scrollHeight;
+  }
 
-      target = parseFloat(document.getElementById("targetTemp").value);
-      actual = parseFloat(document.getElementById("actualTemp").value);
-      skewRate = parseInt(document.getElementById("skewRate").value);
-      prevError = target - actual;
+  function updateCharts(error) {
+    time += skewRate / 1000;
+    errorChart.data.labels.push(time.toFixed(1));
+    errorChart.data.datasets[0].data.push(actual);
+    errorChart.data.datasets[1].data.push(target);
+    errorChart.update();
 
-      const interval = setInterval(() => {
-        const error = target - actual; // +error = too cold, -error = too hot
-        const errorDot = error - prevError; // +errorDot = getting cooler, -errorDot = getting hotter
-        const decision = fuzzyLogic(error, errorDot);
-        outputStatus.textContent = decision;
+    skewChart.data.labels.push(time.toFixed(1));
+    skewChart.data.datasets[0].data.push(error.toFixed(2));
+    skewChart.update();
+  }
 
-        document.getElementById("currentTemp").textContent = actual.toFixed(1) + "°C";
-        document.getElementById("targetDisplay").textContent = target.toFixed(1) + "°C";
-        document.getElementById("errorDisplay").textContent = error.toFixed(2) + "°C";
-        document.getElementById("errorRate").textContent = errorDot.toFixed(2) + "°C/s";
-        document.getElementById("timeElapsed").textContent = time.toFixed(1) + "s";
+  // --- Main Controller ---
 
+  function startFLC() {
+    time = 0;
+    errorChart.data.labels = [];
+    errorChart.data.datasets.forEach(ds => ds.data = []);
+    skewChart.data.labels = [];
+    skewChart.data.datasets[0].data = [];
+    historyLog.textContent = "";
 
-        if (decision === "Heater") actual += 3;
-        else if (decision === "Cooler") actual -= 3;
+    target = parseFloat(document.getElementById("targetTemp").value);
+    actual = parseFloat(document.getElementById("actualTemp").value);
+    skewRate = parseInt(document.getElementById("skewRate").value);
+    prevError = target - actual;
 
-        // Update charts
-        time += skewRate / 1000;
-        errorChart.data.labels.push(time.toFixed(1));
-        errorChart.data.datasets[0].data.push(actual);
-        errorChart.data.datasets[1].data.push(target);
-        errorChart.update();
+    const interval = setInterval(() => {
+      const error = target - actual;
+      const errorDot = error - prevError;
+      const decision = getFuzzyDecision(error, errorDot);
+      const step = calculateStep(error);
 
-        skewChart.data.labels.push(time.toFixed(1));
-        skewChart.data.datasets[0].data.push(error.toFixed(2));
-        skewChart.update();
+      updateDisplay(error, errorDot, decision);
+      updateLog(error, errorDot, decision);
+      updateActual(decision, step);
+      updateCharts(error);
 
-        prevError = error;
+      prevError = error;
 
-        if (time >= 60) clearInterval(interval); // stop after 1 min for demo
-      }, skewRate);
-    }
-  </script>
+   if (Math.abs(target - actual) < 0.1 || time >= 60) clearInterval(interval);
+    }, skewRate);
+  }
+</script>
+
 </body>
 </html>
